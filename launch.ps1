@@ -1,6 +1,6 @@
 # Stock Portfolio Tracker - Launch Script
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Stock Portfolio Tracker" -ForegroundColor Cyan
+Write-Host "  Sajid Stock Portfolio Tracker" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 

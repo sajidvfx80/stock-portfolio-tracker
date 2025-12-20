@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo   Stock Portfolio Tracker
+echo   Sajid Stock Portfolio Tracker
 echo ========================================
 echo.
 

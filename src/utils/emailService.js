@@ -186,7 +186,7 @@ export const formatPortfolioForEmail = (data) => {
           ` : ''}
 
           <div class="footer">
-            <p>This is an automated daily portfolio report from Stock Portfolio Tracker</p>
+            <p>This is an automated daily portfolio report from Sajid Stock Portfolio Tracker</p>
             <p>Generated on ${new Date().toLocaleString('en-IN')}</p>
           </div>
         </div>

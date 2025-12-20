@@ -1,4 +1,4 @@
-# Stock Portfolio Tracker
+# Sajid Stock Portfolio Tracker
 
 An advanced web application for tracking daily trading profits, losses, and portfolio balance with comprehensive analytics and visualizations.
 
