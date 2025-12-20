@@ -1,7 +1,8 @@
 import { format, parseISO } from 'date-fns';
 
 export const calculateBalance = (openingBalance, trades, cashFlows) => {
-  let balance = openingBalance;
+  // Ensure openingBalance is a number
+  let balance = Number(openingBalance) || 0;
   
   // Add cash flows
   const sortedCashFlows = [...cashFlows].sort((a, b) => 
@@ -9,7 +10,7 @@ export const calculateBalance = (openingBalance, trades, cashFlows) => {
   );
   
   sortedCashFlows.forEach(cf => {
-    balance += cf.amount;
+    balance += Number(cf.amount) || 0;
   });
   
   // Add trades profit/loss
@@ -18,11 +19,11 @@ export const calculateBalance = (openingBalance, trades, cashFlows) => {
   );
   
   sortedTrades.forEach(trade => {
-    const commission = trade.commission || 0;
+    const commission = Number(trade.commission) || 0;
     if (trade.profit) {
-      balance += trade.profit - commission; // Deduct commission from profit
+      balance += (Number(trade.profit) || 0) - commission; // Deduct commission from profit
     } else if (trade.loss) {
-      balance -= (trade.loss + commission); // Add commission to loss
+      balance -= ((Number(trade.loss) || 0) + commission); // Add commission to loss
     }
   });
   
@@ -31,24 +32,24 @@ export const calculateBalance = (openingBalance, trades, cashFlows) => {
 
 export const calculateTotalProfitLoss = (trades) => {
   return trades.reduce((total, trade) => {
-    const commission = trade.commission || 0;
+    const commission = Number(trade.commission) || 0;
     if (trade.profit) {
-      return total + (trade.profit - commission); // Net profit after commission
+      return total + ((Number(trade.profit) || 0) - commission); // Net profit after commission
     } else if (trade.loss) {
-      return total - (trade.loss + commission); // Net loss including commission
+      return total - ((Number(trade.loss) || 0) + commission); // Net loss including commission
     }
     return total;
   }, 0);
 };
 
 export const calculateTotalCashFlow = (cashFlows) => {
-  return cashFlows.reduce((total, cf) => total + cf.amount, 0);
+  return cashFlows.reduce((total, cf) => total + (Number(cf.amount) || 0), 0);
 };
 
 export const calculateROI = (openingBalance, totalProfitLoss, totalCashFlow) => {
-  const totalInvested = openingBalance + totalCashFlow;
+  const totalInvested = (Number(openingBalance) || 0) + (Number(totalCashFlow) || 0);
   if (totalInvested === 0) return 0;
-  return ((totalProfitLoss / totalInvested) * 100).toFixed(2);
+  return ((Number(totalProfitLoss) || 0) / totalInvested * 100).toFixed(2);
 };
 
 export const getWinRate = (trades) => {

@@ -44,11 +44,21 @@ export const loadDataFromNeon = async () => {
     
     const data = await response.json();
     
-    // Ensure data structure is valid
+    // Ensure data structure is valid and convert strings to numbers
     const validData = {
-      openingBalance: data.openingBalance || 0,
-      trades: Array.isArray(data.trades) ? data.trades : [],
-      cashFlows: Array.isArray(data.cashFlows) ? data.cashFlows : [],
+      openingBalance: Number(data.openingBalance) || 0,
+      trades: Array.isArray(data.trades) ? data.trades.map(trade => ({
+        ...trade,
+        id: Number(trade.id) || trade.id,
+        profit: trade.profit ? Number(trade.profit) : null,
+        loss: trade.loss ? Number(trade.loss) : null,
+        commission: Number(trade.commission) || 0,
+      })) : [],
+      cashFlows: Array.isArray(data.cashFlows) ? data.cashFlows.map(cf => ({
+        ...cf,
+        id: Number(cf.id) || cf.id,
+        amount: Number(cf.amount) || 0,
+      })) : [],
     };
     
     console.log('Data loaded from Neon successfully:', validData);
