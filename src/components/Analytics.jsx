@@ -16,6 +16,7 @@ import {
 } from '../utils/tradeTypeAnalytics';
 import { formatDateDDMMYY } from '../utils/dateFormat';
 import ProfitLossChart from './ProfitLossChart';
+import AnimatedCounter from './AnimatedCounter';
 
 const Analytics = ({ data }) => {
   const totalProfitLoss = calculateTotalProfitLoss(data.trades);
@@ -66,47 +67,66 @@ const Analytics = ({ data }) => {
       label: 'Total Trades',
       value: totalTrades,
       icon: Target,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-blue-600 dark:text-blue-400',
+      gradient: 'stat-card-gradient-blue',
+      suffix: '',
+      decimals: 0,
     },
     {
       label: 'Win Rate',
-      value: `${winRate}%`,
+      value: parseFloat(winRate),
       icon: Award,
       color: parseFloat(winRate) >= 50 ? 'text-profit' : 'text-loss',
-      bgColor: parseFloat(winRate) >= 50 ? 'bg-green-50' : 'bg-red-50',
+      gradient: parseFloat(winRate) >= 50 ? 'stat-card-gradient-green' : 'stat-card-gradient-red',
+      suffix: '%',
+      decimals: 1,
     },
     {
       label: 'ROI',
-      value: `${roi}%`,
+      value: parseFloat(roi),
       icon: parseFloat(roi) >= 0 ? TrendingUp : TrendingDown,
       color: parseFloat(roi) >= 0 ? 'text-profit' : 'text-loss',
-      bgColor: parseFloat(roi) >= 0 ? 'bg-green-50' : 'bg-red-50',
+      gradient: parseFloat(roi) >= 0 ? 'stat-card-gradient-green' : 'stat-card-gradient-red',
+      suffix: '%',
+      decimals: 2,
     },
     {
       label: 'Profit Factor',
-      value: profitFactor,
+      value: profitFactor === 'N/A' ? 0 : parseFloat(profitFactor),
       icon: TrendingUp,
       color: profitFactor !== 'N/A' && parseFloat(profitFactor) >= 1 ? 'text-profit' : 'text-loss',
-      bgColor: profitFactor !== 'N/A' && parseFloat(profitFactor) >= 1 ? 'bg-green-50' : 'bg-red-50',
+      gradient: profitFactor !== 'N/A' && parseFloat(profitFactor) >= 1 ? 'stat-card-gradient-green' : 'stat-card-gradient-red',
+      suffix: '',
+      decimals: 2,
+      display: profitFactor === 'N/A' ? 'N/A' : null,
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className={`${stat.bgColor} rounded-lg shadow p-6`}>
+            <div 
+              key={index} 
+              className={`${stat.gradient} rounded-xl shadow-lg p-6 card-hover animate-scale-in`}
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                  <p className={`text-2xl font-bold ${stat.color} mt-2`}>
-                    {stat.value}
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{stat.label}</p>
+                  <p className={`text-2xl font-bold ${stat.color} mt-2 tabular-nums`}>
+                    {stat.display || (
+                      <AnimatedCounter 
+                        value={stat.value} 
+                        suffix={stat.suffix} 
+                        decimals={stat.decimals}
+                      />
+                    )}
                   </p>
                 </div>
-                <Icon className={`h-8 w-8 ${stat.color}`} />
+                <Icon className={`h-8 w-8 ${stat.color} flex-shrink-0`} />
               </div>
             </div>
           );
@@ -114,99 +134,111 @@ const Analytics = ({ data }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Trade Breakdown</h2>
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Trade Breakdown</h2>
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
-              <span className="text-gray-700 font-medium">Winning Trades</span>
-              <span className="text-profit font-bold text-lg">{winningTrades}</span>
-            </div>
-            <div className="flex justify-between items-center p-4 bg-red-50 rounded-lg">
-              <span className="text-gray-700 font-medium">Losing Trades</span>
-              <span className="text-loss font-bold text-lg">{losingTrades}</span>
-            </div>
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-700 font-medium">Average Profit</span>
-              <span className="text-profit font-bold text-lg">
-                ₹{avgProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="flex justify-between items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Winning Trades</span>
+              <span className="text-profit font-bold text-lg tabular-nums">
+                <AnimatedCounter value={winningTrades} decimals={0} />
               </span>
             </div>
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-700 font-medium">Average Loss</span>
-              <span className="text-loss font-bold text-lg">
-                ₹{avgLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="flex justify-between items-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Losing Trades</span>
+              <span className="text-loss font-bold text-lg tabular-nums">
+                <AnimatedCounter value={losingTrades} decimals={0} />
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Average Profit</span>
+              <span className="text-profit font-bold text-lg tabular-nums">
+                <AnimatedCounter value={avgProfit} prefix="₹" decimals={2} />
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Average Loss</span>
+              <span className="text-loss font-bold text-lg tabular-nums">
+                <AnimatedCounter value={avgLoss} prefix="₹" decimals={2} />
               </span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Best & Worst Trades</h2>
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Best & Worst Trades</h2>
           <div className="space-y-4">
             {bestTrade ? (
-              <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-200 dark:border-green-700">
                 <div className="flex items-center gap-2 mb-2">
                   <Award className="h-5 w-5 text-profit" />
-                  <span className="font-semibold text-gray-900">Best Trade</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">Best Trade</span>
                 </div>
-                <p className="text-sm text-gray-600 mb-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   {bestTrade.stocks || 'N/A'} • {formatDateDDMMYY(bestTrade.date)}
                 </p>
-                <p className="text-2xl font-bold text-profit">
-                  +₹{((bestTrade.profit || 0) - (bestTrade.commission || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <p className="text-2xl font-bold text-profit tabular-nums">
+                  <AnimatedCounter 
+                    value={((bestTrade.profit || 0) - (bestTrade.commission || 0))} 
+                    prefix="+₹" 
+                    decimals={2}
+                  />
                 </p>
                 {bestTrade.commission > 0 && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    (Gross: ₹{bestTrade.profit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Comm: ₹{bestTrade.commission.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}))
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    (Gross: ₹{bestTrade.profit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Comm: ₹{bestTrade.commission.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                   </p>
                 )}
               </div>
             ) : (
-              <div className="p-4 bg-gray-50 rounded-lg flex items-center gap-2">
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-500">No profitable trades yet</span>
+                <span className="text-gray-500 dark:text-gray-400">No profitable trades yet</span>
               </div>
             )}
 
             {worstTrade ? (
-              <div className="p-4 bg-red-50 rounded-lg border-2 border-red-200">
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-200 dark:border-red-700">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertCircle className="h-5 w-5 text-loss" />
-                  <span className="font-semibold text-gray-900">Worst Trade</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">Worst Trade</span>
                 </div>
-                <p className="text-sm text-gray-600 mb-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   {worstTrade.stocks || 'N/A'} • {formatDateDDMMYY(worstTrade.date)}
                 </p>
-                <p className="text-2xl font-bold text-loss">
-                  -₹{((worstTrade.loss || 0) + (worstTrade.commission || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <p className="text-2xl font-bold text-loss tabular-nums">
+                  <AnimatedCounter 
+                    value={((worstTrade.loss || 0) + (worstTrade.commission || 0))} 
+                    prefix="-₹" 
+                    decimals={2}
+                  />
                 </p>
                 {worstTrade.commission > 0 && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    (Gross: ₹{worstTrade.loss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Comm: ₹{worstTrade.commission.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}))
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    (Gross: ₹{worstTrade.loss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} + Comm: ₹{worstTrade.commission.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                   </p>
                 )}
               </div>
             ) : (
-              <div className="p-4 bg-gray-50 rounded-lg flex items-center gap-2">
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-500">No losing trades yet</span>
+                <span className="text-gray-500 dark:text-gray-400">No losing trades yet</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Daily Profit/Loss Trend</h2>
+      <div className="card p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Daily Profit/Loss Trend</h2>
         <ProfitLossChart dailyStats={dailyStats} />
       </div>
 
       {dailyStats.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Daily Performance Summary</h2>
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Daily Performance Summary</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
@@ -228,10 +260,10 @@ const Analytics = ({ data }) => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {dailyStats.slice().reverse().map((day, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {formatDateDDMMYY(day.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-profit">
@@ -259,8 +291,8 @@ const Analytics = ({ data }) => {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Performance by Trade Type</h2>
+      <div className="card p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Performance by Trade Type</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {['Stocks', 'Commodity', 'Options'].map((type) => {
             const stats = profitLossByType[type] || { profit: 0, loss: 0, commission: 0, net: 0, trades: 0 };
@@ -268,46 +300,46 @@ const Analytics = ({ data }) => {
             const winRate = winRateByType[type] || '0.0';
             
             return (
-              <div key={type} className="border border-gray-200 rounded-lg p-6">
+              <div key={type} className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 bg-white dark:bg-gray-800 card-hover">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{type}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{type}</h3>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     type === 'Stocks'
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                       : type === 'Commodity'
-                      ? 'bg-orange-100 text-orange-800'
-                      : 'bg-purple-100 text-purple-800'
+                      ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300'
+                      : 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
                   }`}>
                     {count} trades
                   </span>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Net P/L:</span>
-                    <span className={`font-semibold ${stats.net >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {stats.net >= 0 ? '+' : ''}₹{stats.net.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Net P/L:</span>
+                    <span className={`font-semibold tabular-nums ${stats.net >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      <AnimatedCounter value={stats.net} prefix={stats.net >= 0 ? '+₹' : '₹'} decimals={2} />
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Profit:</span>
-                    <span className="text-profit font-medium">
-                      ₹{stats.profit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Profit:</span>
+                    <span className="text-profit font-medium tabular-nums">
+                      <AnimatedCounter value={stats.profit} prefix="₹" decimals={2} />
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Loss:</span>
-                    <span className="text-loss font-medium">
-                      ₹{stats.loss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Loss:</span>
+                    <span className="text-loss font-medium tabular-nums">
+                      <AnimatedCounter value={stats.loss} prefix="₹" decimals={2} />
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Commission:</span>
-                    <span className="text-gray-700 font-medium">
-                      ₹{stats.commission.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Commission:</span>
+                    <span className="text-gray-700 dark:text-gray-300 font-medium tabular-nums">
+                      <AnimatedCounter value={stats.commission} prefix="₹" decimals={2} />
                     </span>
                   </div>
-                  <div className="flex justify-between pt-2 border-t border-gray-200">
-                    <span className="text-sm text-gray-600">Win Rate:</span>
+                  <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Win Rate:</span>
                     <span className={`font-semibold ${parseFloat(winRate) >= 50 ? 'text-profit' : 'text-loss'}`}>
                       {winRate}%
                     </span>

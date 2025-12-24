@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import DateInput from './DateInput';
+import { useToast } from '../context/ToastContext';
 
 const EditTradeModal = ({ trade, isOpen, onClose, onSave }) => {
+  const { error } = useToast();
   const [formData, setFormData] = useState({
     date: '',
     tradeType: 'Stocks',
@@ -25,23 +27,21 @@ const EditTradeModal = ({ trade, isOpen, onClose, onSave }) => {
     }
   }, [trade, isOpen]);
 
-  if (!isOpen) return null;
-
   const handleSubmit = (e) => {
     e.preventDefault();
     
     if (!formData.stocks.trim()) {
-      alert('Please enter stock name');
+      error('Please enter stock/instrument name');
       return;
     }
 
     if (!formData.profit && !formData.loss) {
-      alert('Please enter either profit or loss');
+      error('Please enter either profit or loss');
       return;
     }
 
     if (formData.profit && formData.loss) {
-      alert('Please enter either profit OR loss, not both');
+      error('Please enter either profit OR loss, not both');
       return;
     }
 
@@ -77,20 +77,25 @@ const EditTradeModal = ({ trade, isOpen, onClose, onSave }) => {
     });
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-2xl font-semibold text-gray-900">Edit Trade</h2>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center z-10">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Edit Trade</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 dark:text-gray-100">
           <div>
             <label htmlFor="edit-date" className="block text-sm font-medium text-gray-700 mb-2">
               Date
@@ -208,13 +213,13 @@ const EditTradeModal = ({ trade, isOpen, onClose, onSave }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              className="btn-secondary flex-1"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+              className="btn-primary flex-1"
             >
               Save Changes
             </button>

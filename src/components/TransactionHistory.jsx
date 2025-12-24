@@ -2,8 +2,10 @@ import { useState, useMemo } from 'react';
 import { Trash2, Search, Filter, Edit2 } from 'lucide-react';
 import { formatDateDDMMYY } from '../utils/dateFormat';
 import EditTradeModal from './EditTradeModal';
+import { useToast } from '../context/ToastContext';
 
 const TransactionHistory = ({ trades, cashFlows, onDeleteTrade, onDeleteCashFlow, onUpdateTrade }) => {
+  const { success } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [tradeTypeFilter, setTradeTypeFilter] = useState('all');
@@ -90,6 +92,7 @@ const TransactionHistory = ({ trades, cashFlows, onDeleteTrade, onDeleteCashFlow
   const handleSaveEdit = (updatedTrade) => {
     if (onUpdateTrade) {
       onUpdateTrade(updatedTrade);
+      success('Trade updated successfully!', { title: 'Success' });
     }
     setIsEditModalOpen(false);
     setEditingTrade(null);
@@ -101,9 +104,9 @@ const TransactionHistory = ({ trades, cashFlows, onDeleteTrade, onDeleteCashFlow
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Transaction History</h2>
+    <div className="space-y-6 animate-fade-in">
+      <div className="card p-6">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Transaction History</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="relative">
@@ -159,12 +162,12 @@ const TransactionHistory = ({ trades, cashFlows, onDeleteTrade, onDeleteCashFlow
 
         {allTransactions.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No transactions found</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">No transactions found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
@@ -189,10 +192,10 @@ const TransactionHistory = ({ trades, cashFlows, onDeleteTrade, onDeleteCashFlow
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {allTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {formatDateDDMMYY(transaction.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

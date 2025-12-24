@@ -47,3 +47,8 @@ Use any image editor (Paint, Photoshop, GIMP, etc.):
 
 **The `create-icons.html` file will generate simple icons with a blue background and white "S" letter.**
 
+
+
+
+
+

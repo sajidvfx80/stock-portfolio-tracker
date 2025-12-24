@@ -12,7 +12,10 @@ import {
   isNeonConfigured,
   diagnoseNeon
 } from './utils/neonStorage';
-import { Cloud, CloudOff, RefreshCw, AlertCircle } from 'lucide-react';
+import { Cloud, CloudOff, RefreshCw, AlertCircle, Moon, Sun, Download } from 'lucide-react';
+import { useToast } from './context/ToastContext';
+import { useTheme } from './context/ThemeContext';
+import { exportToCSV, exportToExcel, exportToPDF } from './utils/exportUtils';
 
 function App() {
   const [data, setData] = useState({
@@ -24,6 +27,9 @@ function App() {
   const [isNeonEnabled, setIsNeonEnabled] = useState(false);
   const [syncStatus, setSyncStatus] = useState('local'); // 'local', 'syncing', 'synced', 'error'
   const [isLoading, setIsLoading] = useState(true);
+  const { success, error: showError, info, warning } = useToast();
+  const { theme, toggleTheme } = useTheme();
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
   // Initialize data loading
   useEffect(() => {
@@ -73,7 +79,7 @@ function App() {
   // Manual refresh from Neon
   const refreshFromNeon = async () => {
     if (!isNeonEnabled) {
-      alert('Neon is not configured');
+      warning('Neon is not configured');
       return;
     }
     
@@ -88,43 +94,39 @@ function App() {
       setData(validData);
       setSyncStatus('synced');
       
-      // Show detailed message
-      const message = `Data refreshed!\n\nTrades: ${validData.trades.length}\nCash Flows: ${validData.cashFlows.length}\nOpening Balance: ₹${validData.openingBalance.toLocaleString('en-IN')}`;
-      alert(message);
-    } catch (error) {
-      console.error('Error refreshing from Neon:', error);
+      success(`Data refreshed! Trades: ${validData.trades.length}, Cash Flows: ${validData.cashFlows.length}`, {
+        title: 'Data Refreshed',
+      });
+    } catch (err) {
+      console.error('Error refreshing from Neon:', err);
       setSyncStatus('error');
-      alert(`Error refreshing from cloud:\n${error.message}\n\nCheck browser console (F12) for details.`);
+      showError(err.message || 'Error refreshing from cloud. Check console for details.', {
+        title: 'Sync Error',
+      });
     }
   };
 
   // Diagnostic function
   const runDiagnostics = async () => {
     if (!isNeonEnabled) {
-      alert('Neon is not configured');
+      warning('Neon is not configured');
       return;
     }
 
     const results = await diagnoseNeon();
     
-    let message = '🔍 Neon Diagnostic Results:\n\n';
-    message += `✅ Neon Configured: ${results.neonConfigured ? 'Yes' : 'No'}\n`;
-    message += `✅ Connection Working: ${results.connectionWorking ? 'Yes' : 'No'}\n`;
-    message += `✅ Data Exists: ${results.dataExists ? 'Yes' : 'No'}\n\n`;
+    const message = `Neon Configured: ${results.neonConfigured ? 'Yes' : 'No'}\n` +
+      `Connection Working: ${results.connectionWorking ? 'Yes' : 'No'}\n` +
+      `Data Exists: ${results.dataExists ? 'Yes' : 'No'}` +
+      (results.dataStructure ? `\nTrades: ${results.dataStructure.tradesCount}, Cash Flows: ${results.dataStructure.cashFlowsCount}` : '');
 
     if (results.error) {
-      message += `❌ Error: ${results.error}\n\n`;
-    }
-
-    if (results.dataStructure) {
-      message += `📊 Data Structure:\n`;
-      message += `- Opening Balance: ${results.dataStructure.hasOpeningBalance ? 'Yes' : 'No'}\n`;
-      message += `- Trades: ${results.dataStructure.tradesCount}\n`;
-      message += `- Cash Flows: ${results.dataStructure.cashFlowsCount}\n`;
+      showError(results.error, { title: 'Diagnostic Error' });
+    } else {
+      info(message, { title: 'Diagnostic Results', duration: 8000 });
     }
 
     console.log('🔍 Full Diagnostic Results:', results);
-    alert(message);
   };
 
   const updateData = async (newData) => {
@@ -182,6 +184,33 @@ function App() {
     updateData({ openingBalance: balance });
   };
 
+  const handleExport = (format) => {
+    try {
+      if (format === 'json') {
+        const dataStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `portfolio-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        success('Data exported as JSON');
+      } else if (format === 'csv') {
+        exportToCSV(data);
+        success('Data exported as CSV');
+      } else if (format === 'excel') {
+        exportToExcel(data);
+        success('Data exported as Excel');
+      } else if (format === 'pdf') {
+        exportToPDF(data);
+        success('Data exported as PDF');
+      }
+      setExportMenuOpen(false);
+    } catch (err) {
+      showError('Export failed: ' + err.message);
+    }
+  };
+
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'trade', label: 'Add Trade', icon: '➕' },
@@ -191,14 +220,14 @@ function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white gradient-text">
               Sajid Stock Portfolio Tracker
             </h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               {/* Sync Status Indicator */}
               {isNeonEnabled && (
                 <>
@@ -254,38 +283,77 @@ function App() {
                 </>
               )}
               <EmailSender data={data} />
+              
+              {/* Export Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                  className="btn-primary flex items-center gap-2"
+                  title="Export data"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline">Export</span>
+                </button>
+                {exportMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setExportMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20 animate-scale-in">
+                      <button
+                        onClick={() => handleExport('json')}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg"
+                      >
+                        Export as JSON
+                      </button>
+                      <button
+                        onClick={() => handleExport('csv')}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        Export as CSV
+                      </button>
+                      <button
+                        onClick={() => handleExport('excel')}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        Export as Excel
+                      </button>
+                      <button
+                        onClick={() => handleExport('pdf')}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg"
+                      >
+                        Export as PDF
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Theme Toggle */}
               <button
-                onClick={() => {
-                  if (confirm('Are you sure you want to export all data?')) {
-                    const dataStr = JSON.stringify(data, null, 2);
-                    const blob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `portfolio-export-${new Date().toISOString().split('T')[0]}.json`;
-                    a.click();
-                  }
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               >
-                Export Data
+                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <nav className="bg-white border-b">
+      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-1 overflow-x-auto">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition ${
+                className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 <span className="mr-2">{tab.icon}</span>
@@ -296,12 +364,12 @@ function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         {isLoading && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 animate-fade-in">
             <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <p className="text-blue-800">Loading data from cloud...</p>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
+              <p className="text-blue-800 dark:text-blue-200">Loading data from cloud...</p>
             </div>
           </div>
         )}

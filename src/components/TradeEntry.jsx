@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import DateInput from './DateInput';
+import { useToast } from '../context/ToastContext';
 
 const TradeEntry = ({ onAddTrade }) => {
+  const { success, error } = useToast();
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     tradeType: 'Stocks',
@@ -16,17 +18,17 @@ const TradeEntry = ({ onAddTrade }) => {
     e.preventDefault();
     
     if (!formData.stocks.trim()) {
-      alert('Please enter stock name');
+      error('Please enter stock/instrument name');
       return;
     }
 
     if (!formData.profit && !formData.loss) {
-      alert('Please enter either profit or loss');
+      error('Please enter either profit or loss');
       return;
     }
 
     if (formData.profit && formData.loss) {
-      alert('Please enter either profit OR loss, not both');
+      error('Please enter either profit OR loss, not both');
       return;
     }
 
@@ -51,7 +53,7 @@ const TradeEntry = ({ onAddTrade }) => {
       commission: '',
     });
 
-    alert('Trade added successfully!');
+    success('Trade added successfully!', { title: 'Success' });
   };
 
   const handleProfitChange = (e) => {
@@ -73,8 +75,8 @@ const TradeEntry = ({ onAddTrade }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-900 mb-6">Add New Trade</h2>
+    <div className="card p-6 max-w-2xl mx-auto animate-fade-in">
+      <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Add New Trade</h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -85,7 +87,7 @@ const TradeEntry = ({ onAddTrade }) => {
             id="date"
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-enhanced"
             required
             placeholder="DD/MM/YY"
           />
@@ -99,7 +101,7 @@ const TradeEntry = ({ onAddTrade }) => {
             id="tradeType"
             value={formData.tradeType}
             onChange={(e) => setFormData({ ...formData, tradeType: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-enhanced"
           >
             <option value="Stocks">Stocks</option>
             <option value="Commodity">Commodity</option>
@@ -116,7 +118,7 @@ const TradeEntry = ({ onAddTrade }) => {
             id="stocks"
             value={formData.stocks}
             onChange={(e) => setFormData({ ...formData, stocks: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-enhanced"
             placeholder="e.g., Gold Mini/Laurusla, NIFTY, RELIANCE, etc."
             required
           />
@@ -134,7 +136,7 @@ const TradeEntry = ({ onAddTrade }) => {
                 id="profit"
                 value={formData.profit}
                 onChange={handleProfitChange}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="input-enhanced pl-8"
                 placeholder="0.00"
                 min="0"
                 step="0.01"
@@ -153,7 +155,7 @@ const TradeEntry = ({ onAddTrade }) => {
                 id="loss"
                 value={formData.loss}
                 onChange={handleLossChange}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="input-enhanced pl-8"
                 placeholder="0.00"
                 min="0"
                 step="0.01"
@@ -168,16 +170,16 @@ const TradeEntry = ({ onAddTrade }) => {
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
-            <input
-              type="number"
-              id="commission"
-              value={formData.commission}
-              onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
-              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-            />
+              <input
+                type="number"
+                id="commission"
+                value={formData.commission}
+                onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
+                className="input-enhanced pl-8"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Commission will be deducted from profit or added to loss
@@ -192,7 +194,7 @@ const TradeEntry = ({ onAddTrade }) => {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+          className="btn-primary w-full py-3 flex items-center justify-center gap-2"
         >
           <Plus className="h-5 w-5" />
           Add Trade

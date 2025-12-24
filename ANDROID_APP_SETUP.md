@@ -108,3 +108,8 @@ You can use any image editor or online tools to create them.
 
 **Your app is ready to be installed on Android! Just add the icons and deploy!** 🎉
 
+
+
+
+
+
