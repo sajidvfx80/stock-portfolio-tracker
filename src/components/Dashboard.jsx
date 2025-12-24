@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Activity, ExternalLink } from 'lucide-react';
 import {
   calculateBalance,
   calculateTotalProfitLoss,
@@ -13,10 +13,13 @@ import {
 import { formatDateDDMMYY } from '../utils/dateFormat';
 import BalanceChart from './BalanceChart';
 import AnimatedCounter from './AnimatedCounter';
+import TradeTypeTransactionsModal from './TradeTypeTransactionsModal';
 
-const Dashboard = ({ data, updateOpeningBalance }) => {
+const Dashboard = ({ data, updateOpeningBalance, onUpdateTrade, onDeleteTrade }) => {
   const [isEditingBalance, setIsEditingBalance] = useState(false);
   const [newBalance, setNewBalance] = useState(data.openingBalance);
+  const [selectedTradeType, setSelectedTradeType] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const currentBalance = calculateBalance(
     data.openingBalance,
@@ -34,6 +37,16 @@ const Dashboard = ({ data, updateOpeningBalance }) => {
   const handleBalanceUpdate = () => {
     updateOpeningBalance(parseFloat(newBalance) || 0);
     setIsEditingBalance(false);
+  };
+
+  const handleTradeTypeClick = (tradeType) => {
+    setSelectedTradeType(tradeType);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTradeType(null);
   };
 
   const stats = [
@@ -162,20 +175,33 @@ const Dashboard = ({ data, updateOpeningBalance }) => {
             return (
               <div
                 key={type}
-                className={`border-2 rounded-xl p-5 transition-all card-hover ${
+                onClick={() => handleTradeTypeClick(type)}
+                className={`border-2 rounded-xl p-5 transition-all card-hover cursor-pointer ${
                   isProfit
                     ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30'
                     : 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30'
                 }`}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleTradeTypeClick(type);
+                  }
+                }}
+                aria-label={`View ${type} transactions`}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{type}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">{type}</h3>
+                    <ExternalLink className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+                  </div>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     type === 'Stocks'
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                       : type === 'Commodity'
-                      ? 'bg-orange-100 text-orange-800'
-                      : 'bg-purple-100 text-purple-800'
+                      ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300'
+                      : 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
                   }`}>
                     {count} trades
                   </span>
@@ -307,6 +333,16 @@ const Dashboard = ({ data, updateOpeningBalance }) => {
           )}
         </div>
       </div>
+
+      {/* Trade Type Transactions Modal */}
+      <TradeTypeTransactionsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        tradeType={selectedTradeType}
+        trades={data.trades}
+        onUpdateTrade={onUpdateTrade}
+        onDeleteTrade={onDeleteTrade}
+      />
     </div>
   );
 };

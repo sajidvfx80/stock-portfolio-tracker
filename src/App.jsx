@@ -377,6 +377,8 @@ function App() {
           <Dashboard
             data={data}
             updateOpeningBalance={updateOpeningBalance}
+            onUpdateTrade={updateTrade}
+            onDeleteTrade={deleteTrade}
           />
         )}
         {activeTab === 'trade' && <TradeEntry onAddTrade={addTrade} />}
